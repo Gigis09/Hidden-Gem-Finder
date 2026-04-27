@@ -1,1 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hidden Gems</title>
 
+<style>
+/* Basic styling for UI */
+body { background: #121212; color: white; text-align: center; }
+input, button { padding: 10px; margin: 5px; }
+button { background: red; color: white; }
+table { margin: auto; width: 80%; border-collapse: collapse; }
+th, td { border: 1px solid gray; padding: 10px; }
+</style>
+</head>
+
+<body>
+
+<h1> Hidden Gems Finder</h1>
+
+<!-- SEARCH INPUT -->
+<input id="searchInput" placeholder="Search movie">
+<button onclick="search()">Search</button>
+
+<!-- ADD MOVIE -->
+<h3>Add Movie</h3>
+<input id="id" placeholder="ID">
+<input id="title" placeholder="Title">
+<input id="year" placeholder="Year">
+<input id="runtime" placeholder="Runtime">
+<input id="type" placeholder="Type">
+<button onclick="addMovie()">Add</button>
+
+<!-- UPDATE -->
+<h3>Update Movie</h3>
+<input id="updateId" placeholder="Movie ID">
+<input id="newRuntime" placeholder="New Runtime">
+<button onclick="updateMovie()">Update</button>
+
+<!-- DELETE -->
+<h3>Delete Movie</h3>
+<input id="deleteId" placeholder="Movie ID">
+<button onclick="deleteMovie()">Delete</button>
+
+<!-- EXTRA BUTTONS -->
+<br><br>
+<button onclick="hiddenGems()">Hidden Gems</button>
+<button onclick="genres()">Genres</button>
+<button onclick="counts()">Genre Count</button>
+
+<!-- RESULTS TABLE -->
+<table>
+<thead>
+<tr><th>Title</th><th>Year</th><th>Rating</th><th>Votes</th><th>Score</th></tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<script>
+const API = "http://127.0.0.1:5000";
+
+/* Displays results in table */
+function display(data) {
+    const table = document.getElementById("tableBody");
+    table.innerHTML = "";
+
+    data.forEach(row => {
+        table.innerHTML += `
+        <tr>
+            <td>${row[0] || ""}</td>
+            <td>${row[1] || ""}</td>
+            <td>${row[2] || ""}</td>
+            <td>${row[3] || ""}</td>
+            <td>${row[4] ? row[4].toFixed(3) : ""}</td>
+        </tr>`;
+    });
+}
+
+/* SEARCH */
+async function search() {
+    const q = document.getElementById("searchInput").value;
+    const res = await fetch(`${API}/movies/search?title=${q}`);
+    display(await res.json());
+}
+
+/* ADD */
+async function addMovie() {
+    await fetch(`${API}/movies`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            movie_id: id.value,
+            title: title.value,
+            release_year: year.value,
+            runtime: runtime.value,
+            title_type: type.value
+        })
+    });
+    alert("Added!");
+}
+
+/* UPDATE */
+async function updateMovie() {
+    await fetch(`${API}/movies/${updateId.value}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ runtime: newRuntime.value })
+    });
+    alert("Updated!");
+}
+
+/* DELETE */
+async function deleteMovie() {
+    await fetch(`${API}/movies/${deleteId.value}`, {
+        method: "DELETE"
+    });
+    alert("Deleted!");
+}
+
+/* ADVANCED */
+async function hiddenGems() {
+    const res = await fetch(`${API}/hidden-gems`);
+    display(await res.json());
+}
+
+/* JOIN */
+async function genres() {
+    const res = await fetch(`${API}/movies/genres`);
+    display(await res.json());
+}
+
+/* AGGREGATE */
+async function counts() {
+    const res = await fetch(`${API}/genres/count`);
+    display(await res.json());
+}
+</script>
+
+</body>
+</html>
