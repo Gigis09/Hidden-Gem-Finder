@@ -7,6 +7,11 @@ app = Flask()
 Cors(app)
 
 # Used to connect to the postgre server
-
+conn = psycopg2.connect(
+    dbname="hidden_gems_db",
+    user="postgres",
+    password="yourpassword",
+    host="localhost",
+    port="5432"
 
 # Used to search for movies
