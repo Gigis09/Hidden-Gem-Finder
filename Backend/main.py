@@ -10,7 +10,7 @@
  conn = psycopg2.connect(
     dbname="hidden_gems_db",
     user="postgres",
-    password="yourpassword",
+    password="Gigis091234",
     host="localhost",
     port="5432"
 
