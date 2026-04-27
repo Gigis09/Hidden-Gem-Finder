@@ -14,7 +14,7 @@
     host="localhost",
     port="5432"
 
-# Used to search for movies
+# Used to search for movies, 
  @app.route('/movies/search')
  def search_movies():
     title = request.args.get('title', '')
