@@ -1,0 +1,110 @@
+SELECT COUNT(*) FROM movie;
+SELECT COUNT(*) FROM rating;
+SELECT COUNT(*) FROM person;
+SELECT COUNT(*) FROM genre;
+SELECT COUNT(*) FROM movie_genre;
+SELECT COUNT(*) FROM movie_person;
+/* Step 2 */
+INSERT INTO movie (movie_id, title, release_year, runtime, title_type)
+SELECT
+    tconst,
+    primaryTitle,
+    NULLIF(startYear, '\N')::INT,
+    NULLIF(runtimeMinutes, '\N')::INT,
+    titleType
+FROM imdb_titles_raw
+WHERE titleType IN ('movie', 'tvSeries');
+SELECT COUNT(*) FROM movie;
+
+INSERT INTO rating (movie_id, average_rating, num_votes)
+SELECT r.tconst, r.averageRating, r.numVotes
+FROM imdb_ratings_raw r
+JOIN movie m ON r.tconst = m.movie_id;
+SELECT COUNT(*) FROM rating;
+
+INSERT INTO person (person_id, name, birth_year)
+SELECT
+    nconst,
+    primaryName,
+    NULLIF(birthYear, '\N')::INT
+FROM imdb_names_raw;
+SELECT COUNT(*) FROM person;
+
+INSERT INTO genre (genre_name)
+SELECT DISTINCT unnest(string_to_array(genres, ','))
+FROM imdb_titles_raw
+WHERE genres IS NOT NULL
+  AND genres <> '\N'
+  AND genres <> '';
+  SELECT COUNT(*) FROM genre;
+  
+  INSERT INTO movie_genre (movie_id, genre_id)
+SELECT
+    t.tconst,
+    g.genre_id
+FROM imdb_titles_raw t
+JOIN movie m ON t.tconst = m.movie_id
+JOIN genre g ON g.genre_name = ANY(string_to_array(t.genres, ','))
+WHERE t.genres IS NOT NULL
+  AND t.genres <> '\N'
+  AND t.genres <> '';
+  SELECT COUNT(*) FROM movie_genre;
+  
+  INSERT INTO movie_person (movie_id, person_id, role)
+SELECT DISTINCT
+    p.tconst,
+    p.nconst,
+    p.category
+FROM imdb_principals_raw p
+JOIN movie m ON p.tconst = m.movie_id
+JOIN person pe ON p.nconst = pe.person_id
+WHERE p.tconst <> 'tconst'
+Limit = 50000
+ON CONFLICT (movie_id, person_id) DO NOTHING;
+SELECT COUNT(*) FROM movie_person;
+
+/* Step 3 */
+SELECT * FROM movie
+WHERE title ILIKE '%love%'
+LIMIT 10;
+
+SELECT m.title, g.genre_name
+FROM movie m
+JOIN movie_genre mg ON m.movie_id = mg.movie_id
+JOIN genre g ON mg.genre_id = g.genre_id
+LIMIT 10;
+
+SELECT g.genre_name, COUNT(*) AS total_movies
+FROM genre g
+JOIN movie_genre mg ON g.genre_id = mg.genre_id
+GROUP BY g.genre_name
+ORDER BY total_movies DESC;
+
+SELECT
+    m.title,
+    r.average_rating,
+    r.num_votes,
+    (
+        0.6 * (r.average_rating / 10.0) +
+        0.4 * (1.0 / LOG(r.num_votes + 1))
+    ) AS score
+FROM movie m
+JOIN rating r ON m.movie_id = r.movie_id
+ORDER BY score DESC
+LIMIT 20;
+
+INSERT INTO movie (movie_id, title, release_year, runtime, title_type)
+VALUES ('test123', 'Test Movie', 2024, 100, 'movie');
+
+SELECT * FROM movie WHERE movie_id = 'test123';
+
+UPDATE movie
+SET runtime = 150
+WHERE movie_id = 'test123';
+
+SELECT runtime FROM movie WHERE movie_id = 'test123';
+
+DELETE FROM movie
+WHERE movie_id = 'test123';
+
+SELECT * FROM movie WHERE movie_id = 'test123';
